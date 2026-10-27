@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="FlameGuard AI — real-time fire and smoke detection from a live camera feed or an uploaded image." />
+  <title>FlameGuard AI | Image Analysis</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    /* Detection pages need a login: hide the page until Firebase confirms the user. */
+    document.documentElement.classList.add("guard-pending");
+    setTimeout(function () { document.documentElement.classList.add("guard-slow"); }, 8000);
+  </script>
+</head>
+<body data-require-auth>
+  <!-- ===== Navbar ===== -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <a class="brand" href="index.html" aria-label="FlameGuard AI home">
+        <span class="brand-mark">FG</span>
+        <span><strong>FlameGuard</strong><small>AI SAFETY MONITOR</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="index.html">▣ Live Monitoring</a>
+        <a href="image.html" class="active" aria-current="page">▧ Image Analysis</a>
+        <a href="settings.html">⚙ Settings</a>
+      </nav>
+      <div class="topbar-right">
+        <span class="engine-status"><span class="status-dot" id="connectionDot"></span><span id="connectionLabel">AI ENGINE STANDBY</span></span>
+        <div class="auth-buttons">
+          <a class="btn btn-secondary btn-nav" href="login.html">Log in</a>
+          <a class="btn btn-primary btn-nav" href="signup.html">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+      <!-- ===== Heading ===== -->
+      <section class="hero">
+        <div>
+          <h1>Image <span>Analysis</span></h1>
+          <p class="hero-copy">Upload a photo to check it for fire and smoke. Detected objects are outlined directly on the image, with a confidence score for each one. If fire or smoke is found, the alarm rings 2 times.</p>
+        </div>
+        <div class="hero-icon" aria-hidden="true">⌕</div>
+      </section>
+
+      <!-- ===== Upload (full width) ===== -->
+      <section class="camera-section">
+        <article class="panel upload-panel" aria-labelledby="imageTitle">
+          <div class="panel-heading">
+            <div><p class="eyebrow">STATIC IMAGE INPUT</p><h2 id="imageTitle">Upload &amp; detect</h2></div>
+            <span class="setup-number">02</span>
+          </div>
+          <div class="upload-stage" id="uploadStage">
+            <input type="file" id="imageFile" class="sr-input" accept="image/png,image/jpeg,image/webp" />
+            <label class="upload-empty" id="uploadEmpty" for="imageFile">
+              <span class="upload-icon" aria-hidden="true">⬆</span>
+              <strong>Drag &amp; drop an image here</strong>
+              <span class="upload-or">or <u>browse your files</u></span>
+              <small>JPG, PNG or WebP · up to 10 MB · you can also paste an image</small>
+            </label>
+            <canvas id="uploadCanvas" aria-label="Uploaded image with AI predictions"></canvas>
+            <div class="scan-overlay" id="scanOverlay" hidden>
+              <div class="scan-line"></div>
+              <span class="scan-label"><i class="spinner"></i> Analyzing image…</span>
+            </div>
+          </div>
+
+          <div class="file-meta" id="fileMeta" hidden>
+            <span class="file-name" id="fileName">—</span>
+            <span class="meta-chip" id="fileDims">—</span>
+            <span class="meta-chip" id="fileSize">—</span>
+          </div>
+
+          <div class="upload-actions">
+            <label class="btn btn-secondary" for="imageFile" id="chooseBtn">＋ Choose image</label>
+            <button class="btn btn-primary" id="analyzeImageBtn" disabled>⌕ Analyze image</button>
+            <button class="btn btn-secondary" id="clearImageBtn" disabled>✕ Clear</button>
+          </div>
+          <p class="inline-message" id="uploadMessage" role="status">Select an image, then click Analyze image.</p>
+          <p class="help-text" id="emailNote" role="status"></p>
+          <p class="help-text"><span id="thresholdNote"></span> <a class="text-link" href="settings.html">Change settings</a></p>
+        </article>
+
+        </section>
+
+      <!-- ===== Analytics: result (left) + status panel (right) ===== -->
+      <section class="analytics-row">
+        <article class="panel analytics-panel" aria-live="polite">
+          <div class="panel-heading"><div><p class="eyebrow">ANALYTICS</p><h2>Analysis result</h2></div><span class="shield">◇</span></div>
+          <div class="assessment neutral" id="imageVerdict">
+            <span class="assessment-symbol" id="imageVerdictSymbol">▧</span>
+            <div><strong id="imageVerdictTitle">No image analyzed yet</strong><p id="imageVerdictText">Upload an image and run the analysis to see the result here.</p></div>
+          </div>
+
+          <div class="mini-stats">
+            <div class="mini-stat"><span>DETECTIONS</span><strong id="imgCount">—</strong></div>
+            <div class="mini-stat"><span>FIRE / SMOKE</span><strong id="imgThreats">—</strong></div>
+            <div class="mini-stat"><span>TIME</span><strong id="imgTime">—</strong></div>
+          </div>
+
+          <div class="confidence-row"><span>Highest confidence</span><strong id="imgConfidenceValue">—</strong></div>
+          <div class="confidence-track"><span id="imgConfidenceBar"></span></div>
+
+          <div class="detection-list" id="imageDetectionList"><div class="empty-row">Detections will be listed here.</div></div>
+
+          <div class="legend" aria-label="Box colour legend">
+            <span><i class="lg-fire"></i>Fire (verify)</span>
+              <span><i class="lg-smoke"></i>Smoke (verify)</span>
+            <span><i class="lg-other"></i>Other object</span>
+          </div>
+          <p class="safety-note">A single image cannot be cross-checked over time. Always verify the scene yourself.</p>
+        </article>
+        <aside class="status-panel" aria-label="Detection status">
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">SYSTEM STATUS</span><span class="stat-icon">◉</span></div>
+            <div class="stat-value" id="systemStatus">Ready</div>
+            <div class="stat-note" id="systemNote">Waiting for an image</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">LATEST RESULT</span><span class="stat-icon orange">⚠</span></div>
+            <div class="stat-value" id="latestResult">No detection</div>
+            <div class="stat-note" id="latestNote">Waiting for input</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">ANALYSIS COUNT</span><span class="stat-icon">↗</span></div>
+            <div class="stat-value" id="inferenceCount">0</div>
+            <div class="stat-note">Analyses completed (all pages)</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">SESSION ALERTS</span><span class="stat-icon red">!</span></div>
+            <div class="stat-value" id="alertCount">0</div>
+            <div class="stat-note">Fire/smoke predictions above threshold</div>
+          </article>
+        </aside>
+      </section>
+
+      <!-- ===== History ===== -->
+      <section class="panel history-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">EVENT LOG</p><h2>Detection history &amp; alert statistics</h2></div>
+          <button class="btn btn-secondary btn-small" id="clearHistoryBtn">Clear history</button>
+        </div>
+        <div class="analytics-tiles">
+          <div class="mini-stat"><span>TOTAL ALERTS</span><strong id="anTotal">0</strong></div>
+          <div class="mini-stat"><span>FIRE ALERTS</span><strong id="anFire">0</strong></div>
+          <div class="mini-stat"><span>SMOKE ALERTS</span><strong id="anSmoke">0</strong></div>
+          <div class="mini-stat"><span>CAMERA ALERTS</span><strong id="anLive">0</strong></div>
+          <div class="mini-stat"><span>IMAGE ALERTS</span><strong id="anImage">0</strong></div>
+          <div class="mini-stat"><span>PEAK CONFIDENCE</span><strong id="anPeak">—</strong></div>
+        </div>
+        <p class="help-text history-note">History is saved in this browser (localStorage) and is shown on both pages.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>TIME</th><th>RESULT</th><th>CLASS</th><th>CONFIDENCE</th><th>LOCATION</th></tr></thead>
+            <tbody id="historyBody"><tr><td colspan="4" class="table-empty">No events recorded yet.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <span>© FlameGuard AI · STEM student project</span>
+    <span>Not a certified fire alarm. Always verify the scene yourself.</span>
+  </footer>
+
+  <!-- Howler.js: audio library used for the fire alarm sound -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+  <script src="emailConfiguration.js"></script>
+  <script src="common.js"></script>
+  <script src="image.js"></script>
+  <script type="module" src="navauth.js"></script>
+</body>
+</html>

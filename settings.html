@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="FlameGuard AI — detection settings shared by live monitoring and image analysis." />
+  <title>FlameGuard AI | Settings</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ===== Navbar ===== -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <a class="brand" href="index.html" aria-label="FlameGuard AI home">
+        <span class="brand-mark">FG</span>
+        <span><strong>FlameGuard</strong><small>AI SAFETY MONITOR</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="index.html">▣ Live Monitoring</a>
+        <a href="image.html">▧ Image Analysis</a>
+        <a href="settings.html" class="active" aria-current="page">⚙ Settings</a>
+      </nav>
+      <div class="topbar-right">
+        <span class="engine-status"><span class="status-dot" id="connectionDot"></span><span id="connectionLabel">AI ENGINE STANDBY</span></span>
+        <div class="auth-buttons">
+          <a class="btn btn-secondary btn-nav" href="login.html">Log in</a>
+          <a class="btn btn-primary btn-nav" href="signup.html">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <main class="page">
+      <!-- ===== Heading ===== -->
+      <section class="hero">
+        <div>
+          <p class="eyebrow">CONFIGURATION</p>
+          <h1>Detection <span>Settings</span></h1>
+          <p class="hero-copy">These settings are saved in your browser and are used by both the Live Monitoring page and the Image Analysis page.</p>
+        </div>
+        <div class="hero-icon" aria-hidden="true">⚙</div>
+      </section>
+
+      <!-- ===== Settings ===== -->
+      <section class="panel config-panel settings-page-panel">
+        <div class="panel-heading"><div><p class="eyebrow">CONFIGURATION</p><h2>Detection settings</h2></div><span class="setup-number">01</span></div>
+        <div class="config-grid">
+          <div>
+            <label for="confidence">Confidence threshold</label>
+            <select id="confidence">
+              <option value="0.6">60% — sensitive</option>
+              <option value="0.75" selected>75% — balanced</option>
+              <option value="0.85">85% — strict</option>
+              <option value="0.9">90% — very strict</option>
+            </select>
+          </div>
+          <div>
+            <label for="interval">Scan interval (live camera)</label>
+            <select id="interval">
+              <option value="1500">1.5 seconds</option>
+              <option value="2500" selected>2.5 seconds</option>
+              <option value="4000">4 seconds</option>
+            </select>
+          </div>
+          <div>
+            <label for="accuracy">Image accuracy mode</label>
+            <select id="accuracy">
+              <option value="high" selected>High accuracy (2 checks)</option>
+              <option value="standard">Standard (1 check, faster)</option>
+            </select>
+          </div>
+          <p class="help-text">Live fire alerts require at least 75% confidence in 2 of the last 3 camera scans. A single uploaded image needs at least 85% to raise a fire/smoke warning. In High accuracy mode an uploaded image is analyzed twice (normal and mirrored) and the results are combined, so one-off mistakes are filtered out; the live camera always uses one check per frame to stay fast. This reduces false alarms from lights and reflections, but cannot eliminate model errors.</p>
+        </div>
+        <div class="settings-actions">
+          <button class="btn btn-secondary" id="resetSettingsBtn" type="button">↺ Reset to defaults</button>
+          <span class="inline-message" id="settingsSaved" role="status">Changes are saved automatically.</span>
+        </div>
+      </section>
+
+      <!-- ===== Email alerts ===== -->
+      <section class="panel config-panel settings-page-panel">
+        <div class="panel-heading"><div><p class="eyebrow">NOTIFICATIONS</p><h2>Email alerts</h2></div><span class="setup-number">02</span></div>
+        <div class="config-grid email-grid">
+          <div>
+            <label for="emailAlerts">Email alerts</label>
+            <select id="emailAlerts">
+              <option value="on" selected>On</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div>
+            <label for="alertEmail">Alert email address</label>
+            <input type="email" id="alertEmail" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <p class="help-text">When fire or smoke is detected, an email is sent to this address right away. For the live camera it includes your location and a Google Maps link. The same type of alert is emailed at most once every 2 minutes.</p>
+        </div>
+        <div class="settings-actions">
+          <button class="btn btn-secondary" id="testEmailBtn" type="button">✉ Send test email</button>
+          <span class="inline-message" id="emailTestStatus" role="status"></span>
+        </div>
+        <p class="help-text" id="emailSetupNote" role="status"></p>
+      </section>
+  </main>
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <span>© FlameGuard AI · STEM student project</span>
+    <span>Not a certified fire alarm. Always verify the scene yourself.</span>
+  </footer>
+
+  <script src="emailConfiguration.js"></script>
+  <script src="common.js"></script>
+  <script type="module" src="navauth.js"></script>
+</body>
+</html>

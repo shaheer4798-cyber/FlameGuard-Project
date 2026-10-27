@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="FlameGuard AI — real-time fire and smoke detection from a live camera feed or an uploaded image." />
+  <title>FlameGuard AI | Live Monitoring</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    /* Detection pages need a login: hide the page until Firebase confirms the user. */
+    document.documentElement.classList.add("guard-pending");
+    setTimeout(function () { document.documentElement.classList.add("guard-slow"); }, 8000);
+  </script>
+</head>
+<body data-require-auth>
+  <!-- ===== Navbar ===== -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <a class="brand" href="index.html" aria-label="FlameGuard AI home">
+        <span class="brand-mark">FG</span>
+        <span><strong>FlameGuard</strong><small>AI SAFETY MONITOR</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="index.html" class="active" aria-current="page">▣ Live Monitoring</a>
+        <a href="image.html">▧ Image Analysis</a>
+        <a href="settings.html">⚙ Settings</a>
+      </nav>
+      <div class="topbar-right">
+        <span class="engine-status"><span class="status-dot" id="connectionDot"></span><span id="connectionLabel">AI ENGINE STANDBY</span></span>
+        <div class="auth-buttons">
+          <a class="btn btn-secondary btn-nav" href="login.html">Log in</a>
+          <a class="btn btn-primary btn-nav" href="signup.html">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+      <!-- ===== Heading ===== -->
+      <section class="hero">
+        <div>
+          <h1>Fire &amp; Smoke <span>Detection System</span></h1>
+          <p class="hero-copy">Monitor a live camera feed with an AI object-detection model that looks for fire and smoke and raises an early warning. The alarm rings continuously until the fire or smoke is gone. Fire alerts save your location, and a “Send email alert” button appears so you can email the alert with one click. Detection and email settings are on the Settings page.</p>
+        </div>
+        <div class="hero-icon" aria-hidden="true">⌁</div>
+      </section>
+
+      <!-- ===== Camera (full width) ===== -->
+      <section class="camera-section">
+        <article class="panel camera-panel" id="alertPanel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">LIVE INPUT</p><h2>Camera monitor</h2></div>
+            <span class="live-pill" id="livePill"><span></span> OFFLINE</span>
+          </div>
+          <div class="camera-stage" id="cameraStage">
+            <video id="video" autoplay muted playsinline></video>
+            <canvas id="overlay"></canvas>
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <div class="camera-symbol">▣</div>
+              <h3>Camera feed is offline</h3>
+              <p>Press <strong>Start monitoring</strong> and allow camera access to begin live analysis.</p>
+            </div>
+            <div class="camera-hud"><span id="resolutionLabel">NO VIDEO INPUT</span><span id="fpsLabel">AI: IDLE</span></div>
+          </div>
+          <div class="camera-actions">
+            <button class="btn btn-primary" id="startBtn">▶ Start monitoring</button>
+            <button class="btn btn-secondary" id="stopBtn" disabled>■ Stop</button>
+            <button class="btn btn-danger" id="sendEmailBtn" hidden>✉ Send email alert</button>
+          </div>
+          <p class="inline-message" id="cameraMessage" role="status">Press Start monitoring to begin.</p>
+          <p class="help-text" id="settingsNote"></p>
+          <p class="help-text" id="locationNote" role="status"></p>
+          <p class="help-text" id="emailNote" role="status"></p>
+        </article>
+
+      </section>
+
+      <!-- ===== Analytics: assessment (left) + status panel (right) ===== -->
+      <section class="analytics-row">
+        <article class="panel analytics-panel">
+          <div class="panel-heading"><div><p class="eyebrow">ANALYTICS</p><h2>Current assessment</h2></div><span class="shield">◇</span></div>
+          <div class="assessment neutral" id="assessment">
+            <span class="assessment-symbol" id="assessmentSymbol">✓</span>
+            <div><strong id="assessmentTitle">Monitoring inactive</strong><p id="assessmentText">Start monitoring to analyze camera frames.</p></div>
+          </div>
+          <div class="confidence-row"><span>Highest confidence</span><strong id="confidenceValue">—</strong></div>
+          <div class="confidence-track"><span id="confidenceBar"></span></div>
+          <div class="detection-list" id="detectionList"><div class="empty-row">No predictions yet.</div></div>
+          <p class="safety-note">A “clear” result does not guarantee safety. Never use this student demo as a certified fire alarm.</p>
+        </article>
+        <aside class="status-panel" aria-label="Detection status">
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">SYSTEM STATUS</span><span class="stat-icon">◉</span></div>
+            <div class="stat-value" id="systemStatus">Standby</div>
+            <div class="stat-note" id="systemNote">Camera not started</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">LATEST RESULT</span><span class="stat-icon orange">⚠</span></div>
+            <div class="stat-value" id="latestResult">No detection</div>
+            <div class="stat-note" id="latestNote">Waiting for input</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">ANALYSIS COUNT</span><span class="stat-icon">↗</span></div>
+            <div class="stat-value" id="inferenceCount">0</div>
+            <div class="stat-note">Analyses completed (all pages)</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">SESSION ALERTS</span><span class="stat-icon red">!</span></div>
+            <div class="stat-value" id="alertCount">0</div>
+            <div class="stat-note">Fire/smoke predictions above threshold</div>
+          </article>
+        </aside>
+      </section>
+
+      <!-- ===== History ===== -->
+      <section class="panel history-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">EVENT LOG</p><h2>Detection history &amp; alert statistics</h2></div>
+          <button class="btn btn-secondary btn-small" id="clearHistoryBtn">Clear history</button>
+        </div>
+        <div class="analytics-tiles">
+          <div class="mini-stat"><span>TOTAL ALERTS</span><strong id="anTotal">0</strong></div>
+          <div class="mini-stat"><span>FIRE ALERTS</span><strong id="anFire">0</strong></div>
+          <div class="mini-stat"><span>SMOKE ALERTS</span><strong id="anSmoke">0</strong></div>
+          <div class="mini-stat"><span>CAMERA ALERTS</span><strong id="anLive">0</strong></div>
+          <div class="mini-stat"><span>IMAGE ALERTS</span><strong id="anImage">0</strong></div>
+          <div class="mini-stat"><span>PEAK CONFIDENCE</span><strong id="anPeak">—</strong></div>
+        </div>
+        <p class="help-text history-note">History is saved in this browser (localStorage) and is shown on both pages.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>TIME</th><th>RESULT</th><th>CLASS</th><th>CONFIDENCE</th><th>LOCATION</th></tr></thead>
+            <tbody id="historyBody"><tr><td colspan="4" class="table-empty">No events recorded yet.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <span>© FlameGuard AI · STEM student project</span>
+    <span>Not a certified fire alarm. Always verify the scene yourself.</span>
+  </footer>
+
+  <!-- Howler.js: audio library used for the fire alarm sound -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+  <script src="emailConfiguration.js"></script>
+  <script src="common.js"></script>
+  <script src="live.js"></script>
+  <script type="module" src="navauth.js"></script>
+</body>
+</html>
