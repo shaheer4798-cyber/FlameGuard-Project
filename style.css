@@ -284,8 +284,6 @@ input::placeholder { color: #98a4b6; }
 .class-chip.fire { background: var(--red-soft); color: var(--red-text); }
 .class-chip.smoke { background: var(--amber-soft); color: var(--amber-text); }
 
-.safety-note { margin: 14px 0 0; padding-left: 10px; border-left: 3px solid var(--flame); font-size: 11px; line-height: 1.6; color: var(--muted); }
-
 /* ===== Image analysis ===== */
 .upload-stage {
   position: relative; height: clamp(560px, 84vh, 1050px); overflow: hidden;
